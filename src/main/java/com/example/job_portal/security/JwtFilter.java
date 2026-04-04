@@ -28,13 +28,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
+            HttpServletResponse response,
+            FilterChain chain)
             throws ServletException, IOException {
+
+        // ✅ 🔥 CORS PRE-FLIGHT FIX (MOST IMPORTANT)
+        if (request.getMethod().equals("OPTIONS")) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
 
         String path = request.getRequestURI();
 
-        // ✅ 🔥 SKIP AUTH APIs (CRITICAL FIX)
+        // ✅ Skip auth APIs
         if (path.startsWith("/auth")) {
             chain.doFilter(request, response);
             return;
@@ -42,7 +48,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        // ✅ If no header or wrong format → skip
         if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
@@ -50,37 +55,30 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        // ✅ If token is empty → skip
         if (token.trim().isEmpty()) {
             chain.doFilter(request, response);
             return;
         }
 
         try {
-            // ✅ Extract email
             String email = jwtUtil.extractEmail(token);
 
-            // ✅ Authenticate only if not already authenticated
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails userDetails = service.loadUserByUsername(email);
 
-                // ✅ OPTIONAL: Validate token properly
                 if (jwtUtil.validateToken(token, userDetails.getUsername())) {
 
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
 
         } catch (Exception e) {
-            // ✅ Prevent crash
             System.out.println("Invalid JWT Token: " + e.getMessage());
         }
 
