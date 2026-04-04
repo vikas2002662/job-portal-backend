@@ -5,10 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.job_portal.entity.Role;
 import com.example.job_portal.entity.User;
@@ -28,6 +25,7 @@ public class AuthController {
     @Autowired
     private PasswordEncoder encoder;
 
+    // ✅ REGISTER
     @PostMapping("/register")
     public User register(@RequestBody User user) {
 
@@ -41,6 +39,7 @@ public class AuthController {
         return repo.save(user);
     }
 
+    // ✅ LOGIN (🔥 FIXED)
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody User user) {
 
@@ -51,7 +50,10 @@ public class AuthController {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(dbUser.getEmail());
+        // 🔥 FIX: ROLE pass karo
+        String token = jwtUtil.generateToken(
+                dbUser.getEmail(),
+                dbUser.getRole().name());
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
