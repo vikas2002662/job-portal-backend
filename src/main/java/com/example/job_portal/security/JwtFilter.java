@@ -12,10 +12,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.job_portal.util.JwtUtil;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -29,15 +27,15 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain chain)
             throws ServletException, IOException {
 
-        // ✅ OPTIONS allow
-        if (request.getMethod().equals("OPTIONS")) {
-            response.setStatus(HttpServletResponse.SC_OK);
+        // ✅ Allow preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            chain.doFilter(request, response);
             return;
         }
 
         String path = request.getRequestURI();
 
-        // ✅ skip auth
+        // ✅ Skip only auth APIs
         if (path.startsWith("/auth")) {
             chain.doFilter(request, response);
             return;
@@ -53,10 +51,10 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = header.substring(7);
 
         try {
-            String email = jwtUtil.extractEmail(token);
-            String role = jwtUtil.extractRole(token); // 🔥 IMPORTANT
+            if (jwtUtil.validateToken(token)) {
 
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                String email = jwtUtil.extractEmail(token);
+                String role = jwtUtil.extractRole(token);
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         email,
@@ -65,13 +63,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-                // 🔍 DEBUG (optional)
-                System.out.println("User: " + email);
-                System.out.println("Role: ROLE_" + role);
+                System.out.println("✅ Authenticated: " + email + " | ROLE_" + role);
             }
 
         } catch (Exception e) {
-            System.out.println("Invalid JWT: " + e.getMessage());
+            System.out.println("❌ JWT Error: " + e.getMessage());
         }
 
         chain.doFilter(request, response);
