@@ -22,49 +22,50 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {
+                }) // ✅ uses CorsConfig
 
-            .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth
 
-                // 🔓 Public APIs
-                .requestMatchers("/auth/**").permitAll()
+                        // ✅ VERY IMPORTANT (CORS preflight fix)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ KEY FIX: WebSocket endpoints allow karo
-                .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/ws/info").permitAll()
+                        // 🔓 Public APIs
+                        .requestMatchers("/auth/**").permitAll()
 
-                // 🧾 Resume APIs
-                .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
-                .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
-                .requestMatchers(HttpMethod.GET, "/resume/view/**").permitAll()
+                        // 🔌 WebSocket
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws/info").permitAll()
 
-                // 💼 Job APIs
-                .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
-                .requestMatchers(HttpMethod.PUT, "/jobs/**").hasRole("EMPLOYER")
-                .requestMatchers(HttpMethod.DELETE, "/jobs/**").hasRole("EMPLOYER")
+                        // 🧾 Resume APIs
+                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
+                        .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
+                        .requestMatchers(HttpMethod.GET, "/resume/view/**").permitAll()
 
-                // 📩 Apply Job
-                .requestMatchers("/applications/apply/**").hasRole("JOB_SEEKER")
+                        // 💼 Job APIs
+                        .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.PUT, "/jobs/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.DELETE, "/jobs/**").hasRole("EMPLOYER")
 
-                // 👔 Employer view applications
-                .requestMatchers("/applications/employer").hasRole("EMPLOYER")
+                        // 📩 Apply Job
+                        .requestMatchers("/applications/apply/**").hasRole("JOB_SEEKER")
 
-                // 📊 Employer Dashboard
-                .requestMatchers("/dashboard/employer").hasRole("EMPLOYER")
+                        // 👔 Employer
+                        .requestMatchers("/applications/employer").hasRole("EMPLOYER")
 
-                // 🛡️ Admin Dashboard
-                .requestMatchers("/dashboard/admin").hasRole("ADMIN")
+                        // 📊 Dashboard
+                        .requestMatchers("/dashboard/employer").hasRole("EMPLOYER")
+                        .requestMatchers("/dashboard/admin").hasRole("ADMIN")
 
-                // 🌍 Public GET jobs
-                .requestMatchers(HttpMethod.GET, "/jobs/**").permitAll()
+                        // 🌍 Public jobs
+                        .requestMatchers(HttpMethod.GET, "/jobs/**").permitAll()
 
-                // 💬 Chat REST endpoints
-                .requestMatchers("/chat/**").authenticated()
+                        // 💬 Chat
+                        .requestMatchers("/chat/**").authenticated()
 
-                // 🔐 Everything else
-                .anyRequest().authenticated()
-            );
+                        // 🔐 बाकी सब secure
+                        .anyRequest().authenticated());
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
