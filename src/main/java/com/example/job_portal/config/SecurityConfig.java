@@ -38,7 +38,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/ws/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
+                        .requestMatchers(HttpMethod.POST, "/resume/upload").permitAll()
                         .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
 
                         .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
