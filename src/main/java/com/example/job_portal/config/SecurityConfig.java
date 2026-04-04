@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.*;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,17 +31,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ VERY IMPORTANT
+                        // ✅ OPTIONS allow (CORS fix)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/auth/**").permitAll()
 
                         .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/ws/info").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
                         .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
-                        .requestMatchers(HttpMethod.GET, "/resume/view/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
                         .requestMatchers(HttpMethod.PUT, "/jobs/**").hasRole("EMPLOYER")
@@ -54,8 +53,6 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/jobs/**").permitAll()
 
-                        .requestMatchers("/chat/**").authenticated()
-
                         .anyRequest().authenticated());
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -63,21 +60,27 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ 🔥 MAIN CORS FIX
+    // ✅ 🔥 FINAL CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(Arrays.asList(
+        config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
                 "https://prismatic-rolypoly-f8fb8b.netlify.app"));
 
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept"));
 
         config.setAllowCredentials(true);
+
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
