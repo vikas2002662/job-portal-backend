@@ -38,8 +38,8 @@ public class SecurityConfig {
 
                         .requestMatchers("/ws/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
-                        .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
+                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasAuthority("ROLE_JOB_SEEKER")
+                        .requestMatchers(HttpMethod.GET, "/resume/download").hasAuthority("ROLE_JOB_SEEKER")
 
                         .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
                         .requestMatchers(HttpMethod.PUT, "/jobs/**").hasRole("EMPLOYER")
