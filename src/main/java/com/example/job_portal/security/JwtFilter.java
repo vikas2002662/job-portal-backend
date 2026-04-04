@@ -1,15 +1,15 @@
 package com.example.job_portal.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.job_portal.service.CustomUserDetailsService;
 import com.example.job_portal.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
@@ -23,16 +23,13 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private CustomUserDetailsService service;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain chain)
             throws ServletException, IOException {
 
-        // ✅ 🔥 CORS PRE-FLIGHT FIX (MOST IMPORTANT)
+        // ✅ OPTIONS allow
         if (request.getMethod().equals("OPTIONS")) {
             response.setStatus(HttpServletResponse.SC_OK);
             return;
@@ -40,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // ✅ Skip auth APIs
+        // ✅ skip auth
         if (path.startsWith("/auth")) {
             chain.doFilter(request, response);
             return;
@@ -55,31 +52,26 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        if (token.trim().isEmpty()) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         try {
             String email = jwtUtil.extractEmail(token);
+            String role = jwtUtil.extractRole(token); // 🔥 IMPORTANT
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                UserDetails userDetails = service.loadUserByUsername(email);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        email,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
-                if (jwtUtil.validateToken(token, userDetails.getUsername())) {
+                SecurityContextHolder.getContext().setAuthentication(auth);
 
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
-
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
+                // 🔍 DEBUG (optional)
+                System.out.println("User: " + email);
+                System.out.println("Role: ROLE_" + role);
             }
 
         } catch (Exception e) {
-            System.out.println("Invalid JWT Token: " + e.getMessage());
+            System.out.println("Invalid JWT: " + e.getMessage());
         }
 
         chain.doFilter(request, response);
