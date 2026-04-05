@@ -49,8 +49,10 @@ public class AuthController {
             throw new RuntimeException("Invalid password");
         }
 
-        // ✅ ONLY EMAIL (NO ROLE)
-        String token = jwtUtil.generateToken(dbUser.getEmail());
+        // ✅ ROLE PASS KARO
+        String token = jwtUtil.generateToken(
+                dbUser.getEmail(),
+                dbUser.getRole().name());
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
