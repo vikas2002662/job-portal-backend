@@ -1,12 +1,13 @@
 package com.example.job_portal.service;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.job_portal.entity.Resume;
 import com.example.job_portal.entity.User;
 import com.example.job_portal.repository.ResumeRepository;
@@ -15,24 +16,25 @@ import com.example.job_portal.repository.UserRepository;
 @Service
 public class ResumeService {
 
-	private final String UPLOAD_DIR = "D:/job-portal/uploads/";
-
-
     @Autowired
     private ResumeRepository resumeRepo;
 
     @Autowired
     private UserRepository userRepo;
 
-    public String uploadResume(MultipartFile file, String email) throws IOException {
+    @Autowired
+    private Cloudinary cloudinary;
 
-        // 🔒 STEP 1: Validate file (ADD HERE)
+    // ❌ throws IOException हटाया
+    public String uploadResume(MultipartFile file, String email) {
+
+        // 🔒 STEP 1: Validation
         if (file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
 
-        if (file.getContentType() == null || 
-            !file.getContentType().equals("application/pdf")) {
+        if (file.getContentType() == null ||
+                !file.getContentType().equals("application/pdf")) {
             throw new RuntimeException("Only PDF allowed");
         }
 
@@ -41,31 +43,35 @@ public class ResumeService {
             throw new RuntimeException("Only PDF files allowed");
         }
 
-        // 👇 Existing logic continues
+        // 👇 User fetch
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String fileName = System.currentTimeMillis() + "_" + originalName;
-        String filePath = UPLOAD_DIR + fileName;
+        try {
+            // 🚀 Upload to Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "resource_type", "auto",
+                            "folder", "resumes"));
 
-        File dest = new File(filePath);
+            String fileUrl = uploadResult.get("secure_url").toString();
 
-        // (Optional but important) create folder if not exists
-        dest.getParentFile().mkdirs();
+            // 💾 Save in DB
+            Resume resume = resumeRepo.findByUser(user)
+                    .orElse(new Resume());
 
-        file.transferTo(dest);
+            resume.setFileName(originalName);
+            resume.setFilePath(fileUrl); // ✅ URL store
+            resume.setFileType(file.getContentType());
+            resume.setUser(user);
 
-        Resume resume = resumeRepo.findByUser(user)
-                .orElse(new Resume());
+            resumeRepo.save(resume);
 
-        resume.setFileName(fileName);
-        resume.setFilePath(filePath);
-        resume.setFileType(file.getContentType());
-        resume.setUser(user);
+            return fileUrl;
 
-        resumeRepo.save(resume);
-
-        return "Resume uploaded successfully";
+        } catch (Exception e) {
+            throw new RuntimeException("Upload failed: " + e.getMessage());
+        }
     }
-
 }
