@@ -19,7 +19,7 @@ public class FileUploadService {
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "upload_preset", "resume_upload" // 👈 preset use
+                            "upload_preset", "resume_upload" // 👈 MUST match preset name
                     ));
 
             return uploadResult.get("secure_url").toString();
