@@ -31,7 +31,6 @@ public class AuthController {
 
         user.setPassword(encoder.encode(user.getPassword()));
 
-        // Default role
         if (user.getRole() == null) {
             user.setRole(Role.JOB_SEEKER);
         }
@@ -39,7 +38,7 @@ public class AuthController {
         return repo.save(user);
     }
 
-    // ✅ LOGIN (🔥 FIXED)
+    // ✅ LOGIN (FINAL FIXED)
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody User user) {
 
@@ -50,10 +49,8 @@ public class AuthController {
             throw new RuntimeException("Invalid password");
         }
 
-        // 🔥 FIX: ROLE pass karo
-        String token = jwtUtil.generateToken(
-                dbUser.getEmail(),
-                dbUser.getRole().name());
+        // ✅ ONLY EMAIL (NO ROLE)
+        String token = jwtUtil.generateToken(dbUser.getEmail());
 
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
