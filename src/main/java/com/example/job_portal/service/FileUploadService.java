@@ -16,16 +16,17 @@ public class FileUploadService {
 
     public String uploadFile(MultipartFile file) {
         try {
+
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "upload_preset", "resume_upload" // 👈 MUST match preset name
-                    ));
+                            "resource_type", "auto",
+                            "folder", "resumes"));
 
             return uploadResult.get("secure_url").toString();
 
         } catch (Exception e) {
-            throw new RuntimeException("File upload failed: " + e.getMessage());
+            throw new RuntimeException("File upload failed: " + e.getMessage(), e);
         }
     }
 }
