@@ -31,28 +31,32 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ OPTIONS allow (CORS fix)
+                        // ✅ CORS preflight allow
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // ✅ public APIs
                         .requestMatchers("/auth/**").permitAll()
-
                         .requestMatchers("/ws/**").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasRole("JOB_SEEKER")
-                        .requestMatchers(HttpMethod.GET, "/resume/download").hasRole("JOB_SEEKER")
+                        // ✅ JOB SEEKER
+                        .requestMatchers(HttpMethod.POST, "/resume/upload").hasAuthority("ROLE_JOB_SEEKER")
+                        .requestMatchers(HttpMethod.GET, "/resume/download").hasAuthority("ROLE_JOB_SEEKER")
+                        .requestMatchers("/applications/apply/**").hasAuthority("ROLE_JOB_SEEKER")
 
-                        .requestMatchers(HttpMethod.POST, "/jobs").hasRole("EMPLOYER")
-                        .requestMatchers(HttpMethod.PUT, "/jobs/**").hasRole("EMPLOYER")
-                        .requestMatchers(HttpMethod.DELETE, "/jobs/**").hasRole("EMPLOYER")
+                        // ✅ EMPLOYER
+                        .requestMatchers(HttpMethod.POST, "/jobs").hasAuthority("ROLE_EMPLOYER")
+                        .requestMatchers(HttpMethod.PUT, "/jobs/**").hasAuthority("ROLE_EMPLOYER")
+                        .requestMatchers(HttpMethod.DELETE, "/jobs/**").hasAuthority("ROLE_EMPLOYER")
+                        .requestMatchers("/applications/employer").hasAuthority("ROLE_EMPLOYER")
+                        .requestMatchers("/dashboard/employer").hasAuthority("ROLE_EMPLOYER")
 
-                        .requestMatchers("/applications/apply/**").hasRole("JOB_SEEKER")
-                        .requestMatchers("/applications/employer").hasRole("EMPLOYER")
+                        // ✅ ADMIN
+                        .requestMatchers("/dashboard/admin").hasAuthority("ROLE_ADMIN")
 
-                        .requestMatchers("/dashboard/employer").hasRole("EMPLOYER")
-                        .requestMatchers("/dashboard/admin").hasRole("ADMIN")
-
+                        // ✅ public jobs
                         .requestMatchers(HttpMethod.GET, "/jobs/**").permitAll()
 
+                        // ✅ बाकी सब authenticated
                         .anyRequest().authenticated());
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -60,7 +64,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ 🔥 FINAL CORS CONFIG
+    // ✅ FINAL CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -79,11 +83,9 @@ public class SecurityConfig {
                 "Accept"));
 
         config.setAllowCredentials(true);
-
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", config);
 
         return source;

@@ -1,6 +1,5 @@
 package com.example.job_portal.controller;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.job_portal.entity.Application;
 import com.example.job_portal.entity.Resume;
 import com.example.job_portal.entity.User;
 import com.example.job_portal.repository.ResumeRepository;
@@ -23,73 +21,69 @@ import java.io.IOException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 
-
-
 @RestController
 @RequestMapping("/resume")
 public class ResumeController {
 
-    @Autowired
-    private ResumeService service;
-    
-    @Autowired
-    private UserRepository userRepo;
+        @Autowired
+        private ResumeService service;
 
-    @Autowired
-    private ResumeRepository resumeRepo;
+        @Autowired
+        private UserRepository userRepo;
 
-    @PostMapping("/upload")
-    public String upload(@RequestParam("file") MultipartFile file,
-                         Authentication auth) throws IOException {
+        @Autowired
+        private ResumeRepository resumeRepo;
 
-        String email = auth.getName();
-        return service.uploadResume(file, email);
-    }
-    
-    @GetMapping("/download")
-    public ResponseEntity<Resource> download(Authentication auth) throws IOException {
+        @PostMapping("/upload")
+        public String upload(@RequestParam("file") MultipartFile file,
+                        Authentication auth) throws IOException {
 
-        String email = auth.getName();
+                String email = auth.getName();
+                return service.uploadResume(file, email);
+        }
 
-        User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        @GetMapping("/download")
+        public ResponseEntity<Resource> download(Authentication auth) throws IOException {
 
-        Resume resume = resumeRepo.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                String email = auth.getName();
 
-        Path path = Paths.get(resume.getFilePath());
-        Resource resource = new UrlResource(path.toUri());
+                User user = userRepo.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=" + resume.getFileName())
-                .body(resource);
-    }
-    
-    @GetMapping("/view/{userId}")
-    public ResponseEntity<Resource> viewResume(@PathVariable Long userId) throws IOException {
+                Resume resume = resumeRepo.findByUser(user)
+                                .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                Path path = Paths.get(resume.getFilePath());
+                Resource resource = new UrlResource(path.toUri());
 
-        Resume resume = resumeRepo.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Resume not found"));
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=" + resume.getFileName())
+                                .body(resource);
+        }
 
-        Path path = Paths.get(resume.getFilePath());
-        Resource resource = new UrlResource(path.toUri());
+        @GetMapping("/view/{userId}")
+        public ResponseEntity<Resource> viewResume(@PathVariable Long userId) throws IOException {
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=" + resume.getFileName())
-                .body(resource);
-    }
-    
-   
+                User user = userRepo.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
+
+                Resume resume = resumeRepo.findByUser(user)
+                                .orElseThrow(() -> new RuntimeException("Resume not found"));
+
+                Path path = Paths.get(resume.getFilePath());
+                Resource resource = new UrlResource(path.toUri());
+
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.CONTENT_TYPE, "application/pdf")
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "inline; filename=" + resume.getFileName())
+                                .body(resource);
+        }
+
 }

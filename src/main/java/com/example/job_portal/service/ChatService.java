@@ -27,9 +27,8 @@ public class ChatService {
     public List<ChatMessage> getMessages(Long user1, Long user2) {
 
         return repo
-            .findBySenderIdAndReceiverIdOrReceiverIdAndSenderIdOrderByTimestampAsc(
-                user1, user2,
-                user1, user2
-            );
+                .findBySenderIdAndReceiverIdOrReceiverIdAndSenderIdOrderByTimestampAsc(
+                        user1, user2,
+                        user1, user2);
     }
 }
