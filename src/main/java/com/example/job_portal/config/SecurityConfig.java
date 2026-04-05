@@ -72,7 +72,7 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
-                "https://prismatic-rolypoly-f8fb8b.netlify.app"));
+                "https://jobdeeekhoo.netlify.app"));
 
         config.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"));
