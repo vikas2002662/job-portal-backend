@@ -70,7 +70,7 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(Arrays.asList(
+        config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",
                 "https://jobdeeekhoo.netlify.app"));
 
