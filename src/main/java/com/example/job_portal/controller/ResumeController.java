@@ -26,7 +26,6 @@ public class ResumeController {
         @Autowired
         private ResumeRepository resumeRepo;
 
-        // ✅ Upload (Cloudinary)
         @PostMapping("/upload")
         public String upload(@RequestParam("file") MultipartFile file,
                         Authentication auth) {
@@ -35,7 +34,6 @@ public class ResumeController {
                 return service.uploadResume(file, email);
         }
 
-        // ✅ Download → URL return
         @GetMapping("/download")
         public ResponseEntity<String> download(Authentication auth) {
 
@@ -47,10 +45,9 @@ public class ResumeController {
                 Resume resume = resumeRepo.findByUser(user)
                                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-                return ResponseEntity.ok(resume.getFilePath()); // 🔥 Cloudinary URL
+                return ResponseEntity.ok(resume.getFilePath());
         }
 
-        // ✅ View → URL return
         @GetMapping("/view/{userId}")
         public ResponseEntity<String> viewResume(@PathVariable Long userId) {
 
@@ -60,6 +57,6 @@ public class ResumeController {
                 Resume resume = resumeRepo.findByUser(user)
                                 .orElseThrow(() -> new RuntimeException("Resume not found"));
 
-                return ResponseEntity.ok(resume.getFilePath()); // 🔥 Cloudinary URL
+                return ResponseEntity.ok(resume.getFilePath());
         }
 }

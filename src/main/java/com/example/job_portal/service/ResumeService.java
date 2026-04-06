@@ -25,10 +25,9 @@ public class ResumeService {
     @Autowired
     private Cloudinary cloudinary;
 
-    // ❌ throws IOException हटाया
     public String uploadResume(MultipartFile file, String email) {
 
-        // 🔒 STEP 1: Validation
+        // 🔒 Validation
         if (file.isEmpty()) {
             throw new RuntimeException("File is empty");
         }
@@ -48,7 +47,7 @@ public class ResumeService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         try {
-            // 🚀 Upload to Cloudinary
+            // 🚀 Cloudinary Upload (SIGNED)
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
@@ -62,7 +61,7 @@ public class ResumeService {
                     .orElse(new Resume());
 
             resume.setFileName(originalName);
-            resume.setFilePath(fileUrl); // ✅ URL store
+            resume.setFilePath(fileUrl);
             resume.setFileType(file.getContentType());
             resume.setUser(user);
 
