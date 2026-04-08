@@ -55,8 +55,8 @@ public class SecurityConfig {
 
                         // ✅ public jobs
                         .requestMatchers(HttpMethod.GET, "/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/resume/view/**").hasAuthority("ROLE_EMPLOYER")
 
-                        // ✅ बाकी सब authenticated
                         .anyRequest().authenticated());
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
