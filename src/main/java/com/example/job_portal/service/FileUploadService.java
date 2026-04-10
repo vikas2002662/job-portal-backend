@@ -20,8 +20,11 @@ public class FileUploadService {
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "resource_type", "raw", // ✅ MUST
-                            "folder", "resumes"));
+                            "resource_type", "raw",
+                            "folder", "resumes",
+                            "type", "upload", // ✅ VERY IMPORTANT
+                            "access_mode", "public" // ✅ force public
+                    ));
 
             return uploadResult.get("secure_url").toString();
 
