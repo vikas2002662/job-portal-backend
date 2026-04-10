@@ -26,7 +26,12 @@ public class FileUploadService {
                             "access_mode", "public" // ✅ force public
                     ));
 
-            return uploadResult.get("secure_url").toString();
+            String url = uploadResult.get("secure_url").toString();
+
+            // 🔥 replace image → raw
+            url = url.replace("/image/upload/", "/raw/upload/");
+
+            return url;
 
         } catch (Exception e) {
             throw new RuntimeException("File upload failed: " + e.getMessage(), e);

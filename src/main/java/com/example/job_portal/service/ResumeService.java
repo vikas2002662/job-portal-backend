@@ -47,27 +47,32 @@ public class ResumeService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         try {
-            // 🚀 Cloudinary Upload (SIGNED)
+            // 🔥 FIXED CLOUDINARY UPLOAD
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     ObjectUtils.asMap(
-                            "resource_type", "auto",
-                            "folder", "resumes"));
+                            "resource_type", "raw", // ✅ MUST
+                            "folder", "resumes",
+                            "type", "upload", // ✅ PUBLIC
+                            "access_mode", "public" // ✅ NO 401
+                    ));
 
-            String fileUrl = uploadResult.get("secure_url").toString();
+            // 🔥 CORRECT RAW URL
+            String url = uploadResult.get("secure_url").toString();
+            url = url.replace("/image/upload/", "/raw/upload/");
 
             // 💾 Save in DB
             Resume resume = resumeRepo.findByUser(user)
                     .orElse(new Resume());
 
             resume.setFileName(originalName);
-            resume.setFilePath(fileUrl);
+            resume.setFilePath(url);
             resume.setFileType(file.getContentType());
             resume.setUser(user);
 
             resumeRepo.save(resume);
 
-            return fileUrl;
+            return url;
 
         } catch (Exception e) {
             throw new RuntimeException("Upload failed: " + e.getMessage());
